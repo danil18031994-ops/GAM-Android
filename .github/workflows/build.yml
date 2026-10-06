@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-release:
@@ -98,3 +98,10 @@ jobs:
           path: GAM-1.5-release.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish direct-download GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v1.5-phone-test --yes --cleanup-tag 2>/dev/null || true
+          gh release create v1.5-phone-test GAM-1.5-release.apk             --title "GAM 1.5 Phone Test"             --notes "Install-tested release APK for direct phone download."
