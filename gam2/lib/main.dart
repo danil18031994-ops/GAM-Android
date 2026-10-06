@@ -632,7 +632,7 @@ class _BookingPageState extends State<BookingPage> {
         });
       } else {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('last_booking', '${DateFormat('dd.MM.yyyy').format(date)}|$time|$service');
+        await prefs.setString('last_booking', "${DateFormat('dd.MM.yyyy').format(date)}|$time|$service");
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -820,7 +820,7 @@ class RepairDetails extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text((data['car'] ?? 'Автомобиль').toString(), style: const TextStyle(fontWeight: FontWeight.w900)),
-                    Text('${data['plate'] ?? ''} · Заказ-наряд №${data['order'] ?? '—'}',
+                    Text("${data['plate'] ?? ''} · Заказ-наряд №${data['order'] ?? '—'}",
                       style: const TextStyle(color: kMuted, fontSize: 12)),
                   ],
                 ),
@@ -909,7 +909,7 @@ class PriceRow extends StatelessWidget {
         children: [
           Expanded(child: Text(label, style: TextStyle(fontWeight: total ? FontWeight.w900 : FontWeight.w500))),
           Text(
-            '${NumberFormat.decimalPattern('ru_RU').format(value)} ₽',
+            "${NumberFormat.decimalPattern('ru_RU').format(value)} ₽",
             style: TextStyle(color: total ? kLime : Colors.white, fontWeight: FontWeight.w900, fontSize: total ? 21 : 15),
           ),
         ],
