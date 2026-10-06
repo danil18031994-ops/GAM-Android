@@ -1,4 +1,4 @@
-name: Build and Install-Test GAM APK
+name: Build and Install-Test GAM Release APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-install-test:
+  build-release:
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -39,22 +39,37 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build debug APK
-        run: gradle --no-daemon --stacktrace assembleDebug
+      - name: Build unsigned release APK
+        run: gradle --no-daemon --stacktrace assembleRelease
 
-      - name: Verify APK metadata and signature
+      - name: Sign release APK
         shell: bash
         run: |
           set -euo pipefail
-          APK="app/build/outputs/apk/debug/app-debug.apk"
+          UNSIGNED="app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -s "$UNSIGNED"
+          PASS="$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)"
+
+          keytool -genkeypair -v             -keystore gam-release.jks             -storepass "$PASS"             -keypass "$PASS"             -alias gam             -keyalg RSA             -keysize 2048             -validity 10000             -dname "CN=GAM Test Release, OU=GAM, O=City Garage, C=RU"
+
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -f -p 4 "$UNSIGNED" GAM-1.5-aligned.apk
+
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign             --ks gam-release.jks             --ks-key-alias gam             --ks-pass pass:"$PASS"             --key-pass pass:"$PASS"             --v1-signing-enabled true             --v2-signing-enabled true             --v3-signing-enabled true             --out GAM-1.5-release.apk             GAM-1.5-aligned.apk
+
+      - name: Verify release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="GAM-1.5-release.apk"
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee apksigner.txt
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee badging.txt
-          grep -F "package: name='com.gam.citygarage'" badging.txt
+          grep -F "package: name='com.gam.citygarage.release'" badging.txt
+          grep -F "versionCode='15'" badging.txt
+          grep -F "versionName='1.5.0'" badging.txt
           grep -F "targetSdkVersion:'35'" badging.txt
           grep -F "launchable-activity: name='ru.gam.app.MainActivity'" badging.txt
-          cp "$APK" GAM-1.4-android35.apk
-          ls -lh GAM-1.4-android35.apk
+          ls -lh "$APK"
 
       - name: Enable KVM
         run: |
@@ -62,7 +77,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm || true
 
-      - name: Install and launch on Android emulator
+      - name: Install and launch release APK on Android 15 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -70,16 +85,16 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            adb install -r GAM-1.4-android35.apk
-            adb shell pm path com.gam.citygarage
-            adb shell am start -W -n com.gam.citygarage/ru.gam.app.MainActivity
+            adb install GAM-1.5-release.apk
+            adb shell pm path com.gam.citygarage.release
+            adb shell am start -W -n com.gam.citygarage.release/ru.gam.app.MainActivity
             sleep 3
-            adb shell dumpsys activity activities | grep -F "com.gam.citygarage" | head -20
+            adb shell dumpsys activity activities | grep -F "com.gam.citygarage.release" | head -20
 
-      - name: Upload install-tested APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: GAM-1.4-install-tested
-          path: GAM-1.4-android35.apk
+          name: GAM-1.5-release-install-tested
+          path: GAM-1.5-release.apk
           if-no-files-found: error
           retention-days: 30
