@@ -41,6 +41,7 @@ jobs:
           cp gam2/pubspec.yaml build/gam_app/pubspec.yaml
           rm -rf build/gam_app/lib
           cp -R gam2/lib build/gam_app/lib
+          rm -rf build/gam_app/test
           cp gam2/android/AndroidManifest.xml build/gam_app/android/app/src/main/AndroidManifest.xml
           mkdir -p build/gam_app/android/app/src/main/res/drawable
           cp gam2/android/gam_icon.xml build/gam_app/android/app/src/main/res/drawable/gam_icon.xml
