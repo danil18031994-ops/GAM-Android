@@ -5,11 +5,11 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.gam.citygarage'
+        applicationId 'com.gam.citygarage.release'
         minSdk 24
         targetSdk 35
-        versionCode 14
-        versionName '1.4.0'
+        versionCode 15
+        versionName '1.5.0'
     }
 
     compileOptions {
@@ -18,11 +18,9 @@ android {
     }
 
     buildTypes {
-        debug {
-            versionNameSuffix '-debug'
-        }
         release {
             minifyEnabled false
+            debuggable false
         }
     }
 }
